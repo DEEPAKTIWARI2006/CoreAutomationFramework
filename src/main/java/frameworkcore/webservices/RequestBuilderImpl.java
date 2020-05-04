@@ -2,6 +2,7 @@ package frameworkcore.webservices;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.path.json.JsonPath.from;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,287 +11,160 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 
-import org.json.simple.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import frameworkcore.frameworkutils.Constants;
 import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 
-/**
- * @author deepaktiwari
- *
- */
 public class RequestBuilderImpl {
-
-	/**
-	 * 
-	 */
+	
 	private static Logger logger = LoggerFactory.getLogger(RequestBuilderImpl.class);
-	/**
-	 * 
-	 */
-	private static String serviceBaseURL = null;
-	/**
-	 * 
-	 */
-	private static RequestSpecification requestSpec = null;
-	/**
-	 * 
-	 */
-	private static RequestSpecBuilder builder = null;
-	/**
-	 * 
-	 */
-	private static Response response = null;
-	/**
-	 * 
-	 */
-	private static String strResponse = null;
-	/**
-	 * 
-	 */
+	private String serviceBaseURL = null;
+	private RequestSpecification requestSpec = null;
+	private RequestSpecBuilder builder = null;
+	private Response response = null;
+	private String strResponse = null;
 	private static String apiToken = null;
+	
 
-	/**
-	 * 
-	 */
 	public RequestBuilderImpl() {
 	}
-
-	/**
-	 * @param BaseURL
-	 */
-	public void setBaseURI(String baseURL) {
-		serviceBaseURL = baseURL;
+	
+	public void SetBaseURI(String BaseURL) {
+		serviceBaseURL = BaseURL;
 	}
-
-	/**
-	 * 
-	 */
-	public void requestSpecificationBuilder() {
+	
+	public void RequestSpecificationBuilder() {
 		builder = new RequestSpecBuilder();
 		builder.setContentType("application/json");
 		requestSpec = builder.build();
 	}
-
-	/**
-	 * @param UserName
-	 * @param Password
-	 */
-	public void setAuthentication(String userName, String password) {
-		requestSpec.auth().preemptive().basic(userName, password);
+	
+	public void SetAuthentication(String UserName, String Password) {
+		requestSpec.auth().preemptive()
+		.basic(UserName, Password);
 	}
-
-	/**
-	 * @param serviceRequestType
-	 * @param apiEndPoint
-	 */
-	public void setRequestType(String serviceRequestType, String apiEndPoint) {
-
-		String serviceEndPoint = serviceBaseURL + apiEndPoint;
-
+	
+	public void SetRequestType(String serviceRequestType, String apiEndPoint) {
+		
+		String serviceEndPoint  = serviceBaseURL + apiEndPoint;
+		
 		switch (serviceRequestType) {
-
-		case "GET":
-			response = given().relaxedHTTPSValidation().spec(requestSpec).when().get(serviceEndPoint);
-			break;
-
-		case "POST":
-			response = given().relaxedHTTPSValidation().spec(requestSpec).when().post(serviceEndPoint);
-			break;
-
-		case "PUT":
-			break;
-
-		case "DELETE":
-			break;
-
+    	
+        case "GET":
+        	response = given().relaxedHTTPSValidation().spec(requestSpec).when().get(serviceEndPoint);
+        	break;
+        	
+        case "POST":
+        	response = given().relaxedHTTPSValidation().spec(requestSpec).when().post(serviceEndPoint);
+        	break;
+        	
+        case "PUT":
+        	break;
+        	
+        case "DELETE":
+        	break;
+        	
 		}
 	}
-
-	/**
-	 * @return
-	 */
-	public String extractResponseAsString() {
+	
+	public String ExtractResponseAsString() {
 		strResponse = response.then().extract().response().asString();
 		return strResponse;
 	}
-
-	/**
-	 * 
-	 */
-	public void setToken() {
+	
+	public void SetToken() {
 		apiToken = from(strResponse).getString("token");
 		System.setProperty("AuthToken", apiToken);
 		logger.info("Token is " + apiToken);
 	}
-
-	/**
-	 * @return
-	 */
-	public String getToken() {
+	
+	public String GetToken() {
 		logger.info("Token is " + System.getProperty("AuthToken"));
 		return System.getProperty("AuthToken");
 	}
-
-	/**
-	 * @return
-	 */
-	public int getStatusCode() {
+	
+	public int GetStatusCode() {
 		return response.getStatusCode();
 	}
-
-	/**
-	 * @param testDataID
-	 */
-	public void writeResponseToFile(String testDataID) {
+	
+	public void WriteResponseToFile(String testDataID) {
 		try {
-			File file = new File(Constants.ACTUALJSONFILESPATH + "/" + testDataID + ".json");
-			file.createNewFile();
-			FileWriter fileWriter = new FileWriter(file);
-			fileWriter.write(strResponse);
-			fileWriter.flush();
-			fileWriter.close();
-		} catch (IOException e) {
+            File file=new File(Constants.ACTUALJSONFILESPATH + "/" + testDataID + ".json");  
+            file.createNewFile();  
+            FileWriter fileWriter = new FileWriter(file); 
+            fileWriter.write(strResponse);  
+            fileWriter.flush();  
+            fileWriter.close(); 
+		}catch(IOException e) {
 			logger.error("Not able to write to File");
 		}
 	}
-
-	/**
-	 * @param ExpectedFileName
-	 * @param xPath
-	 * @return
-	 */
-	public String readResponseValueFromFile(String expectedFileName, String xPath) {
-		try {
-			String expectedFilePath = Constants.EXPECTEDJSONFILESPATH + "/" + expectedFileName + ".json";
-			String expectedValue = new String(Files.readAllBytes(Paths.get(expectedFilePath)));
-			return from(expectedValue).getString(xPath);
-		} catch (IOException e) {
+	
+	public String ReadResponseValueFromFile(String ExpectedFileName, String xPath) {
+		try
+		{
+			String expectedFilePath = Constants.EXPECTEDJSONFILESPATH + "/" + ExpectedFileName + ".json" ; 
+			String ExpectedValue = new String(Files.readAllBytes(Paths.get(expectedFilePath)));
+			return from(ExpectedValue).getString(xPath);
+		}catch(IOException e) {
 			logger.error("Not able to read File");
 			return null;
 		}
 	}
-
-	/**
-	 * @param xPath
-	 * @return
-	 */
-	public String extractResponseValueAsString(String xPath) {
+	
+	public String ExtractResponseValueAsString(String xPath) {
 		return from(strResponse).getString(xPath);
 	}
-
-	/**
-	 * @param FileName
-	 */
-	public void setBody(String fileName) {
-		File file = new File(Constants.BODYJSONFILESPATH + "/" + fileName + ".json");
+	
+	public void SetBody(String FileName) {
+		File file = new File(Constants.BODYJSONFILESPATH + "/" + FileName + ".json");
 		requestSpec.body(file);
 	}
-
-	/**
-	 * @param cookiesInfo
-	 */
-	public void setCookies(HashMap<String, String> cookiesInfo) {
+	
+	
+	public void SetCookies(HashMap<String, String> cookiesInfo) {
 		builder.addCookies(cookiesInfo);
 	}
-
-	/**
-	 * @param headers
-	 */
-	public void setHeaders(String headers) {
-
+	
+	public void SetHeaders(String headers) {
+		
 		String[] apiheaders = headers.split("\\|");
-		for (String header : apiheaders) {
+		for(String header:apiheaders) {
 			String[] arrHeader = header.split(":");
-			if (arrHeader[0].equalsIgnoreCase("Authorization"))
+			if(arrHeader[0].equalsIgnoreCase("Authorization"))
 				requestSpec.header(arrHeader[0], "Token " + System.getProperty("AuthToken"));
 			else
 				requestSpec.header(arrHeader[0], arrHeader[1]);
-
+			
 		}
 	}
-
-	/**
-	 * @param headerName
-	 * @return
-	 */
-	public String getHeaderValue(String headerName) {
+	
+	public String GetHeaderValue(String headerName) {
 		return response.getHeaders().get(headerName).getName();
 	}
-
-	/**
-	 * @param xPath
-	 * @return
-	 */
-	public String extractValueFromJSON(String xPath) {
+	
+	public String ExtractValueFromJSON(String xPath) {
 		return from(strResponse).getString(xPath);
 	}
-
-	/**
-	 * @param xPath
-	 * @return
-	 */
-	public List<String> extractValuesFromJSON(String xPath) {
+	
+	public List<String> ExtractValuesFromJSON(String xPath) {
 		return from(strResponse).getList(xPath);
 	}
+	
+	public void SetPathParams() {
+		
+	}
+	
+	public void SetFormParams() {
+		
+	}
+	
+	public void SetQueryParams() {
+		
+	}
 
-	public int getTotalRecords() {
-      int total = 0;
-      JsonPath jp = new JsonPath(response.asString());
-      String rows = jp.get("data.id.size()").toString();
-      total = Integer.parseInt(rows);
-      return total;
-  }
-  public int getCountForKeyTotal() {
-      int count = 0;
-      JsonPath jp = new JsonPath(response.asString());
-      String value = jp.get("Total").toString();
-      count = Integer.parseInt(value);
-      return count;
-  }
-  
-  public int getCountForKeyNametotal() {
-      int count = 0;
-      JsonPath jp = new JsonPath(response.asString());
-      String value = jp.get("total").toString();
-      count = Integer.parseInt(value);
-      return count;
-  }
-  
-  public int getTotalSizeOfResponseList() {
-      int total = 0;
-      JsonPath jp = new JsonPath(response.asString());
-      String rows = jp.get("data.companyList.id.size()").toString();
-      total = Integer.parseInt(rows);
-      return total;
-  }
-  
-  public int getAPIResponseCountForSmallCap() {
-      int total = 0;
-      JsonPath jp = new JsonPath(response.asString());
-      String rows = jp.get("SMALLCAP.id.size()").toString();
-      total = Integer.parseInt(rows);
-      return total;
-  }
-  
-  public int getAPIResponseCountForLargeCap() {
-      int total = 0;
-      JsonPath jp = new JsonPath(response.asString());
-      String rows = jp.get("LARGECAP.id.size()").toString();
-      total = Integer.parseInt(rows);
-      return total;
-  }
-  
-  public int getResultCount(String key) {
-    int total = 0;
-    JsonPath jp = new JsonPath(response.asString());
-    String count = jp.get(key).toString();
-    total = Integer.parseInt(count);
-    return total;
-   
-}
 }

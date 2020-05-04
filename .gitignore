@@ -17,5 +17,4 @@
 .metadata
 .project
 /*/*/target/
-.DS_Store
-!pom.xml	
+.DS_Store	
