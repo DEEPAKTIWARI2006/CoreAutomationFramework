@@ -8,7 +8,7 @@
 
 	<properties>
 		<selenium.version>3.141.5</selenium.version>
-		<org.testng.version>7.1.0</org.testng.version>
+		<org.testng.version>7.3.0</org.testng.version>
 		<io.cucumber.version>4.7.4</io.cucumber.version>
 		<io.rest.version>4.3.0</io.rest.version>
 		<maven.compiler.version>3.8.1</maven.compiler.version>

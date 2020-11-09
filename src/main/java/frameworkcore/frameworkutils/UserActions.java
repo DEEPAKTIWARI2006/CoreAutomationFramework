@@ -359,7 +359,7 @@ public class UserActions {
 	
 	}
 	
-	public static void highLightElement(WebDriver driver, WebElement element)
+	public void highLightElement(WebDriver driver, WebElement element)
 	{
 	JavascriptExecutor js=(JavascriptExecutor)driver; 
 
